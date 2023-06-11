@@ -23,6 +23,12 @@ def send_attachments_to_chat(attachments):
     :param attachments: список вложений
     """
     attaches = {'photo': [], 'audio': []}
+    vk.messages.send(
+        chat_id=1,
+        message='Сталкеры, внимание! Выброс начнётся с минуты на минуту. Ищите глубокую нору, если жить охота.',
+        random_id=get_random_id()
+    )
+    sleep(6)
     for ata in attachments:
         attaches[ata[:5]].append(ata)
     for i in range(0, len(attaches['audio']), 5):
@@ -41,6 +47,11 @@ def send_attachments_to_chat(attachments):
         )
         print(f'send photo {photo} response - {response}')
         sleep(5)
+    vk.messages.send(
+        chat_id=1,
+        message='Всёёё, выброс закончился! Надеюсь, никто не пострадал?',
+        random_id=get_random_id()
+    )
     print('Выброс закончился')
 
 
@@ -80,8 +91,6 @@ def get_attachments_after_timestamp(timestamp):
                 if attachment['type'] == 'audio':
                     attachments_list.append(
                         f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}")
-        else:
-            break
 
     return attachments_list, new_last_tstamp
 
