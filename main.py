@@ -27,7 +27,7 @@ def send_attachments_to_chat(attachments):
         attaches[ata[:5]].append(ata)
     for i in range(0, len(attaches['audio']), 5):
         response = vk.messages.send(
-            peer_id=SENPAI_ID,
+            chat_id=1,
             attachment=attaches['audio'][i:i + 5],
             random_id=get_random_id()
         )
@@ -35,7 +35,7 @@ def send_attachments_to_chat(attachments):
         sleep(3)
     for photo in attaches['photo']:
         response = vk.messages.send(
-            peer_id=SENPAI_ID,
+            chat_id=1,
             attachment=photo,
             random_id=get_random_id()
         )
@@ -66,7 +66,7 @@ def get_today_attachments():
 
 
 def get_attachments_after_timestamp(timestamp):
-    history = vk.messages.getHistory(user_id=SENPAI_ID)['items']
+    history = vk.messages.getHistory(user_id=SENPAI_ID, count=200)['items']
     new_last_tstamp = history[0]['date']
     attachments_list = []
     for m in history:
