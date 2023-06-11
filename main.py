@@ -1,0 +1,99 @@
+import vk_api
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.longpoll import VkLongPoll, VkEventType
+
+from datetime import datetime
+from time import sleep
+from random import randint
+
+SENPAI_ID = 120259013
+CHAT_ID = 172783274
+access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
+
+
+def get_random_id():
+    return randint(0, 2147483646)
+
+
+def send_attachments_to_chat(attachments):
+    """
+    Отправляет вложения в беседу с указанным id.
+    :param chat_id: id беседы
+    :param attachments: список вложений
+    """
+    attaches = {'photo': [], 'audio': []}
+    for ata in attachments:
+        attaches[ata[:5]].append(ata)
+    for i in range(0, len(attaches['audio']), 5):
+        response = vk.messages.send(
+            chat_id=1,
+            attachment=attaches['audio'][i:i+5],
+            random_id=get_random_id()
+        )
+        print(f'send audios {i}:{i+5} response - {response}')
+        sleep(3)
+    for photo in attaches['photo']:
+        response = vk.messages.send(
+            chat_id=1,
+            attachment=photo,
+            random_id=get_random_id()
+        )
+        print(f'send photo {photo} response - {response}')
+        sleep(5)
+    print('Выброс закончился')
+
+
+def get_today_attachments():
+    """
+    Получает ваши сообщения с вложениями за сегодняшний день.
+    :return: список вложений
+    """
+    today = datetime.now().date()
+    history = vk.messages.getHistory(user_id=SENPAI_ID)['items']
+    attachments_list = []
+    for m in history:
+        if 'attachments' in m and datetime.fromtimestamp(m['date']).date() == today:
+            for attachment in m['attachments']:
+                if attachment['type'] == 'photo':
+                    attachments_list.append(
+                        f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}_{attachment['photo']['access_key']}")
+                if attachment['type'] == 'audio':
+                    attachments_list.append(
+                        f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}")
+
+    return attachments_list
+
+
+def handle_message(event):
+    """
+    Обработчик сообщений бота.
+    :param event: событие из LongPoll сервера
+    """
+    if event.type == VkEventType.MESSAGE_NEW:
+        if event.text == '!выброс' and event.peer_id == SENPAI_ID:
+            attachments = get_today_attachments()
+            if attachments:
+                send_attachments_to_chat(attachments=attachments)
+            else:
+                print('Вложений нет')
+
+
+# Авторизация бота
+vk_session = vk_api.VkApi(token=access_token)
+vk = vk_session.get_api()
+
+longpoll = VkBotLongPoll(vk_session, 197221192)
+
+# Получение id беседы, куда был добавлен бот
+# longpoll_settings = vk.groups.getLongPollSettings(group_id=197221192, access_token=access_token)
+# chat_ids = longpoll_settings['response']['settings']['api_version']['value']['message_new']['chat_ids']
+# chat_id = chat_ids[0]
+
+
+# Подключение к LongPoll серверу
+longpoll = VkLongPoll(vk_session)
+
+# Обработка сообщений
+for event in longpoll.listen():
+    if event.type == VkEventType.MESSAGE_NEW:
+        handle_message(event)
