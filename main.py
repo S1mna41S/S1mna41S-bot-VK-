@@ -52,6 +52,11 @@ def send_attachments_to_chat(attachments):
         message='Всёёё, выброс закончился! Надеюсь, никто не пострадал?',
         random_id=get_random_id()
     )
+    vk.messages.send(
+        peer_id=SENPAI_ID,
+        message='Done',
+        random_id=get_random_id()
+    )
     print('Выброс закончился')
 
 
