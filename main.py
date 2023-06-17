@@ -26,7 +26,8 @@ def send_attachments_to_chat(attachments):
     vk.messages.send(
         chat_id=1,
         message='Сталкеры, внимание! Выброс начнётся с минуты на минуту. Ищите глубокую нору, если жить охота.',
-        random_id=get_random_id()
+        random_id=get_random_id(),
+        attachment='photo-197221192_457239196'
     )
     sleep(6)
     for ata in attachments:
@@ -50,7 +51,8 @@ def send_attachments_to_chat(attachments):
     vk.messages.send(
         chat_id=1,
         message='Всёёё, выброс закончился! Надеюсь, никто не пострадал?',
-        random_id=get_random_id()
+        random_id=get_random_id(),
+        attachment='photo-197221192_457239195'
     )
     vk.messages.send(
         peer_id=SENPAI_ID,
