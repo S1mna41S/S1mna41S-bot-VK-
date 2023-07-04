@@ -6,14 +6,22 @@ from last_timestamp_reader.timestamp_reader import TimeStampReader
 
 from datetime import datetime
 from time import sleep
-from random import randint
+from random import randint, choice
+import json
 
 SENPAI_ID = 120259013
 access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
 
+PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
+PREV_AUDIO_KEY_NAME = 'remaining_audios'
+
 
 def get_random_id():
     return randint(0, 2147483646)
+
+
+class exc(Exception):
+    pass
 
 
 def send_attachments_to_chat(attachments):
@@ -22,37 +30,62 @@ def send_attachments_to_chat(attachments):
     :param chat_id: id беседы
     :param attachments: список вложений
     """
+    if not attachments:
+        print('Нечего кидать')
+        return
+
+    def time_to_sleep():
+        return randint(3, 7)
+
     attaches = {'photo': [], 'audio': []}
+    for ata in attachments:
+        # Добавление в словарь вложений по категориям
+        attaches[ata[:5]].append(ata)
+    messages = ['0'] + attaches['photo'] + ['-1']
+    audios_on_messages = {i: [] for i in messages}
+    remaining_messages = messages
+    try:
+        for i, audio in enumerate(attaches['audio']):
+            while True:
+                if not remaining_messages:
+                    remaining_audios = attaches['audio'][i:]
+                    raise exc
+                rand_message = choice(remaining_messages)
+                if len(audios_on_messages[rand_message]) < 9:
+                    break
+                else:
+                    remaining_messages.remove(rand_message)
+
+            audios_on_messages[rand_message].append(audio)
+    except exc:
+        data = {PREV_AUDIO_KEY_NAME: remaining_audios}
+        with open(PREV_AUDIO_FILE_NAME, 'w') as f:
+            json.dump(data, f)
+
     vk.messages.send(
         chat_id=1,
+        # peer_id=SENPAI_ID,
         message='Сталкеры, внимание! Выброс начнётся с минуты на минуту. Ищите глубокую нору, если жить охота.',
         random_id=get_random_id(),
-        attachment='photo-197221192_457239196'
+        attachment=['photo-197221192_457239196'] + audios_on_messages['0']
     )
-    sleep(6)
-    for ata in attachments:
-        attaches[ata[:5]].append(ata)
-    for i in range(0, len(attaches['audio']), 5):
-        response = vk.messages.send(
-            chat_id=1,
-            attachment=attaches['audio'][i:i + 5],
-            random_id=get_random_id()
-        )
-        print(f'send audios {i}:{i + 5} response - {response}')
-        sleep(3)
+    sleep(time_to_sleep())
+
     for photo in attaches['photo']:
         response = vk.messages.send(
             chat_id=1,
-            attachment=photo,
+            # peer_id=SENPAI_ID,
+            attachment=[photo] + audios_on_messages[photo],
             random_id=get_random_id()
         )
         print(f'send photo {photo} response - {response}')
-        sleep(5)
+        sleep(time_to_sleep())
     vk.messages.send(
         chat_id=1,
+        # peer_id=SENPAI_ID,
         message='Всёёё, выброс закончился! Надеюсь, никто не пострадал?',
         random_id=get_random_id(),
-        attachment='photo-197221192_457239195'
+        attachment=['photo-197221192_457239195'] + audios_on_messages['-1']
     )
     vk.messages.send(
         peer_id=SENPAI_ID,
@@ -112,10 +145,19 @@ def handle_message(event):
             send_new_attachments()
 
 
+def _get_previous_attaches():
+    with open(PREV_AUDIO_FILE_NAME, 'r') as f:
+        data = json.load(f)
+
+    return data[PREV_AUDIO_KEY_NAME]
+
+
 def send_new_attachments():
     tstamp_reader = TimeStampReader()
     last_timestamp = tstamp_reader.get_last_timestamp()
     attachments, new_timestamp = get_attachments_after_timestamp(last_timestamp)
+    prev_audio = _get_previous_attaches()
+    attachments = prev_audio + attachments
     if attachments:
         send_attachments_to_chat(attachments=attachments)
     else:
