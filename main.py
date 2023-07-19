@@ -37,11 +37,11 @@ def send_attachments_to_chat(attachments):
     def time_to_sleep():
         return randint(3, 7)
 
-    attaches = {'photo': [], 'audio': []}
+    attaches = {'photo': [], 'audio': [], 'video': []}
     for ata in attachments:
         # Добавление в словарь вложений по категориям
         attaches[ata[:5]].append(ata)
-    messages = ['0'] + attaches['photo'] + ['-1']
+    messages = ['0'] + attaches['video'] + attaches['photo'] + ['-1']
     audios_on_messages = {i: [] for i in messages}
     remaining_messages = messages
     try:
@@ -71,7 +71,7 @@ def send_attachments_to_chat(attachments):
     )
     sleep(time_to_sleep())
 
-    for photo in attaches['photo']:
+    for photo in (attaches['video'] + attaches['photo']):
         response = vk.messages.send(
             chat_id=1,
             # peer_id=SENPAI_ID,
@@ -125,12 +125,13 @@ def get_attachments_after_timestamp(timestamp):
             continue
         if 'attachments' in m and m['date'] >= timestamp:
             for attachment in m['attachments']:
-                if attachment['type'] == 'photo':
+                type = attachment['type']
+                if type in ['photo', 'video']:
                     attachments_list.append(
-                        f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}_{attachment['photo']['access_key']}")
-                if attachment['type'] == 'audio':
+                        f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}_{attachment[type]['access_key']}")
+                if type == 'audio':
                     attachments_list.append(
-                        f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}")
+                        f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}")
 
     return attachments_list, new_last_tstamp
 
