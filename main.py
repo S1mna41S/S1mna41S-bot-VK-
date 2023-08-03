@@ -10,6 +10,7 @@ from random import randint, choice
 import json
 
 SENPAI_ID = 120259013
+PEERS_ID = [SENPAI_ID, 209523958]
 access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
 
 PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
@@ -117,18 +118,24 @@ def get_today_attachments():
 
 
 def get_attachments_after_timestamp(timestamp):
-    history = vk.messages.getHistory(user_id=SENPAI_ID, count=200)['items']
+    history = []
+    for peer in PEERS_ID:
+        history.extend(vk.messages.getHistory(user_id=peer, count=200)['items'])
+    history.sort(key=lambda x: -x['date'])
     new_last_tstamp = history[0]['date']
     attachments_list = []
     for m in history:
-        if m['from_id'] != SENPAI_ID:
+        if m['from_id'] not in PEERS_ID:
             continue
         if 'attachments' in m and m['date'] >= timestamp:
             for attachment in m['attachments']:
                 type = attachment['type']
                 if type in ['photo', 'video']:
-                    attachments_list.append(
-                        f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}_{attachment[type]['access_key']}")
+                    if 'access_key' in attachment[type]:
+                        attachments_list.append(
+                            f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}_{attachment[type]['access_key']}")
+                    else:
+                        attachments_list.append(f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}")
                 if type == 'audio':
                     attachments_list.append(
                         f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}")
