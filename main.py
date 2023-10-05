@@ -88,11 +88,12 @@ def send_attachments_to_chat(attachments):
         random_id=get_random_id(),
         attachment=['photo-197221192_457239195'] + audios_on_messages['-1']
     )
-    vk.messages.send(
-        peer_id=SENPAI_ID,
-        message='Done',
-        random_id=get_random_id()
-    )
+    for peer in PEERS_ID:
+        vk.messages.send(
+            peer_id=peer,
+            message='Done',
+            random_id=get_random_id()
+        )
     print('Выброс закончился')
 
 
