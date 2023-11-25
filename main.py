@@ -10,7 +10,7 @@ from random import randint, choice
 import json
 
 SENPAI_ID = 120259013
-PEERS_ID = [SENPAI_ID, 209523958]
+PEERS_ID = [SENPAI_ID, 209523958, 390452625]
 access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
 
 PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
