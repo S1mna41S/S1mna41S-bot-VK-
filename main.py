@@ -10,6 +10,7 @@ from random import randint, choice
 import json
 
 SENPAI_ID = 120259013
+STARTERS_ID = [SENPAI_ID, 209523958]
 PEERS_ID = [SENPAI_ID, 209523958, 390452625]
 access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
 
@@ -25,7 +26,7 @@ class exc(Exception):
     pass
 
 
-def send_attachments_to_chat(attachments):
+def send_attachments_to_chat(attachments, new_timestamp):
     """
     Отправляет вложения в беседу с указанным id.
     :param chat_id: id беседы
@@ -91,7 +92,7 @@ def send_attachments_to_chat(attachments):
     for peer in PEERS_ID:
         vk.messages.send(
             peer_id=peer,
-            message='Done',
+            message=f'Done. New timestamp - {new_timestamp}',
             random_id=get_random_id()
         )
     print('Выброс закончился')
@@ -150,7 +151,7 @@ def handle_message(event):
     :param event: событие из LongPoll сервера
     """
     if event.type == VkEventType.MESSAGE_NEW:
-        if event.text == '!выброс' and event.peer_id == SENPAI_ID:
+        if event.text == '!выброс' and event.peer_id in STARTERS_ID:
             send_new_attachments()
 
 
@@ -168,7 +169,7 @@ def send_new_attachments():
     prev_audio = _get_previous_attaches()
     attachments = prev_audio + attachments
     if attachments:
-        send_attachments_to_chat(attachments=attachments)
+        send_attachments_to_chat(attachments=attachments, new_timestamp=new_timestamp)
     else:
         print('Вложений нет')
 
