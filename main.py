@@ -11,7 +11,7 @@ import json
 
 SENPAI_ID = 120259013
 STARTERS_ID = [SENPAI_ID, 209523958]
-PEERS_ID = [SENPAI_ID, 209523958, 390452625]
+PEERS_ID = [SENPAI_ID, 209523958]
 access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
 
 PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
@@ -39,10 +39,18 @@ def send_attachments_to_chat(attachments, new_timestamp):
     def time_to_sleep():
         return randint(3, 7)
 
+    print('Вложения найдены!')
     attaches = {'photo': [], 'audio': [], 'video': []}
+    attaches2log = {'photo': 'фото', 'audio': 'аудио', 'video': 'видео'}
     for ata in attachments:
         # Добавление в словарь вложений по категориям
         attaches[ata[:5]].append(ata)
+    print('Сегодня у нас в меню...')
+    for ata_type in attaches:
+        if attaches[ata_type]:
+            print(f'{len(attaches[ata_type])} {attaches2log[ata_type]}')
+
+    print('Последние подготовки...')
     messages = ['0'] + attaches['video'] + attaches['photo'] + ['-1']
     audios_on_messages = {i: [] for i in messages}
     remaining_messages = messages
@@ -64,6 +72,7 @@ def send_attachments_to_chat(attachments, new_timestamp):
         with open(PREV_AUDIO_FILE_NAME, 'w') as f:
             json.dump(data, f)
 
+    print('Выброс начинается...')
     vk.messages.send(
         chat_id=1,
         # peer_id=SENPAI_ID,
@@ -163,8 +172,11 @@ def _get_previous_attaches():
 
 
 def send_new_attachments():
+    print('Стартуем!')
     tstamp_reader = TimeStampReader()
+    print('Читается время начала...')
     last_timestamp = tstamp_reader.get_last_timestamp()
+    print('Ищутся последние вложения...')
     attachments, new_timestamp = get_attachments_after_timestamp(last_timestamp)
     prev_audio = _get_previous_attaches()
     attachments = prev_audio + attachments
@@ -176,6 +188,7 @@ def send_new_attachments():
     tstamp_reader.set_new_timestamp(new_timestamp)
 
 
+print('Включаем бота...')
 # Авторизация бота
 vk_session = vk_api.VkApi(token=access_token)
 vk = vk_session.get_api()
@@ -191,6 +204,7 @@ longpoll = VkBotLongPoll(vk_session, 197221192)
 # Подключение к LongPoll серверу
 longpoll = VkLongPoll(vk_session)
 
+print('Бот ждёт команды')
 # Обработка сообщений
 for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW:
