@@ -8,11 +8,14 @@ from datetime import datetime
 from time import sleep
 from random import randint, choice
 import json
+from collections import defaultdict
+from random import shuffle
 
 SENPAI_ID = 120259013
 STARTERS_ID = [SENPAI_ID, 209523958]
 PEERS_ID = [SENPAI_ID, 209523958]
 access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
+users_score = {}
 
 PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
 PREV_AUDIO_KEY_NAME = 'remaining_audios'
@@ -40,6 +43,57 @@ def send_attachments_to_chat(attachments, new_timestamp):
         return randint(3, 7)
 
     print('Вложения найдены!')
+    print("Отправляю титры")
+    meme_names = ['конченный идиот',
+                  'самый сексуальный мужик в мире',
+                  'горячая чикса',
+                  'злодей-британец',
+                  'так себе шутник',
+                  'пубертатная язва',
+                  'какой-то мужик']
+    shuffle(meme_names)
+    name_for_others = 'недопонятые гении'
+    vk.messages.send(
+        chat_id=1,
+        message='В главных ролях: ',
+        random_id=get_random_id()
+    )
+    sleep(1)
+    # Удаление ключей, где сумма значений во вложенных словарях равна нулю
+    filtered_data = {k: v for k, v in users_score.items() if sum(v.values()) != 0}
+    sorted_users_score = dict(sorted(filtered_data.items(), key=lambda item: sum(item[1].values()), reverse=True))
+    for user_id, meme in zip(sorted_users_score.keys(), meme_names):
+        # Получение информации о пользователе
+        user_info = vk.users.get(user_ids=user_id)[0]
+        # Извлечение имени и фамилии пользователя
+        first_name = user_info['first_name']
+        last_name = user_info['last_name']
+        attaches_message = ''
+        for attach in sorted_users_score[user_id]:
+            attaches_message += f'{sorted_users_score[user_id][attach]} {attach} '
+        vk.messages.send(
+            chat_id=1,
+            message=f'{meme}: {last_name} {first_name}\n{attaches_message}',
+            random_id=get_random_id()
+        )
+        sleep(time_to_sleep())
+    if len(sorted_users_score) > len(meme_names):
+        message = name_for_others + ': '
+        for user_id in list(sorted_users_score[len(meme_names):]):
+            # Получение информации о пользователе
+            user_info = vk.users.get(user_ids=user_id)[0]
+            # Извлечение имени и фамилии пользователя
+            first_name = user_info['first_name']
+            last_name = user_info['last_name']
+            attaches_message = ''
+            for attach in sorted_users_score[user_id]:
+                attaches_message += f'{sorted_users_score[user_id][attach]} {attach} '
+            message += f'{last_name} {first_name}\n{attaches_message}'
+        vk.messages.send(
+            chat_id=1,
+            message=message,
+            random_id=get_random_id()
+        )
     attaches = {'photo': [], 'audio': [], 'video': []}
     attaches2log = {'photo': 'фото', 'audio': 'аудио', 'video': 'видео'}
     for ata in attachments:
@@ -104,40 +158,29 @@ def send_attachments_to_chat(attachments, new_timestamp):
             message=f'Done. New timestamp - {new_timestamp}',
             random_id=get_random_id()
         )
+    for user_id in users_score:
+        if user_id not in PEERS_ID:
+            vk.messages.send(
+                peer_id=user_id,
+                message='Done.',
+                random_id=get_random_id()
+            )
     print('Выброс закончился')
-
-
-def get_today_attachments():
-    """
-    Получает ваши сообщения с вложениями за сегодняшний день.
-    :return: список вложений
-    """
-    today = datetime.now().date()
-    history = vk.messages.getHistory(user_id=SENPAI_ID)['items']
-    attachments_list = []
-    for m in history:
-        if 'attachments' in m and datetime.fromtimestamp(m['date']).date() == today:
-            for attachment in m['attachments']:
-                if attachment['type'] == 'photo':
-                    attachments_list.append(
-                        f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}_{attachment['photo']['access_key']}")
-                if attachment['type'] == 'audio':
-                    attachments_list.append(
-                        f"{attachment['type']}{attachment[attachment['type']]['owner_id']}_{attachment[attachment['type']]['id']}")
-
-    return attachments_list
 
 
 def get_attachments_after_timestamp(timestamp):
     history = []
-    for peer in PEERS_ID:
-        history.extend(vk.messages.getHistory(user_id=peer, count=200)['items'])
+    # Получение списка всех диалогов
+    conversations = vk.messages.getConversations()['items']
+    for conversation in conversations:
+        # Получение истории с каждым юзером
+        peer_id = conversation['conversation']['peer']['id']
+        users_score[peer_id] = defaultdict(int)
+        history.extend(vk.messages.getHistory(user_id=peer_id, count=200)['items'])
     history.sort(key=lambda x: -x['date'])
     new_last_tstamp = history[0]['date']
     attachments_list = []
     for m in history:
-        if m['from_id'] not in PEERS_ID:
-            continue
         if 'attachments' in m and m['date'] >= timestamp:
             for attachment in m['attachments']:
                 type = attachment['type']
@@ -150,6 +193,7 @@ def get_attachments_after_timestamp(timestamp):
                 if type == 'audio':
                     attachments_list.append(
                         f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}")
+                users_score[m['from_id']][type] += 1
 
     return attachments_list, new_last_tstamp
 
