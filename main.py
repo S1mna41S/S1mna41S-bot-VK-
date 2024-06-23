@@ -44,15 +44,15 @@ def send_attachments_to_chat(attachments, new_timestamp):
 
     print('Вложения найдены!')
     print("Отправляю титры")
-    meme_names = ['конченный идиот',
-                  'самый сексуальный мужик в мире',
-                  'горячая чикса',
-                  'злодей-британец',
-                  'так себе шутник',
-                  'пубертатная язва',
-                  'какой-то мужик']
+    meme_names = ['Конченный идиот',
+                  'Самый сексуальный мужик в мире',
+                  'Горячая чикса',
+                  'Злодей-британец',
+                  'Так себе шутник',
+                  'Пубертатная язва',
+                  'Какой-то мужик']
     shuffle(meme_names)
-    name_for_others = 'недопонятые гении'
+    name_for_others = 'Недопонятые гении'
     vk.messages.send(
         chat_id=1,
         message='В главных ролях: ',
@@ -78,7 +78,7 @@ def send_attachments_to_chat(attachments, new_timestamp):
         )
         sleep(time_to_sleep())
     if len(sorted_users_score) > len(meme_names):
-        message = name_for_others + ': '
+        message = name_for_others + ':\n'
         for user_id in list(sorted_users_score[len(meme_names):]):
             # Получение информации о пользователе
             user_info = vk.users.get(user_ids=user_id)[0]
@@ -88,7 +88,7 @@ def send_attachments_to_chat(attachments, new_timestamp):
             attaches_message = ''
             for attach in sorted_users_score[user_id]:
                 attaches_message += f'{sorted_users_score[user_id][attach]} {attach} '
-            message += f'{last_name} {first_name}\n{attaches_message}'
+            message += f'\n{last_name} {first_name}\n{attaches_message}'
         vk.messages.send(
             chat_id=1,
             message=message,
