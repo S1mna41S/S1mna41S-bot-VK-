@@ -158,7 +158,7 @@ def send_attachments_to_chat(attachments, new_timestamp):
             message=f'Done. New timestamp - {new_timestamp}',
             random_id=get_random_id()
         )
-    for user_id in users_score:
+    for user_id in filtered_data:
         if user_id not in PEERS_ID:
             vk.messages.send(
                 peer_id=user_id,
