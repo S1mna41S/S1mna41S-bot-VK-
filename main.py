@@ -2,9 +2,6 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.longpoll import VkLongPoll, VkEventType
 
-from last_timestamp_reader.timestamp_reader import TimeStampReader
-
-from datetime import datetime
 from time import sleep
 from random import randint, choice
 import json
@@ -20,6 +17,8 @@ users_score = {}
 PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
 PREV_AUDIO_KEY_NAME = 'remaining_audios'
 
+DONE = 'Done.'
+
 
 def get_random_id():
     return randint(0, 2147483646)
@@ -29,7 +28,7 @@ class exc(Exception):
     pass
 
 
-def send_attachments_to_chat(attachments, new_timestamp):
+def send_attachments_to_chat(attachments):
     """
     Отправляет вложения в беседу с указанным id.
     :param chat_id: id беседы
@@ -152,23 +151,16 @@ def send_attachments_to_chat(attachments, new_timestamp):
         random_id=get_random_id(),
         attachment=['photo-197221192_457239195'] + audios_on_messages['-1']
     )
-    for peer in PEERS_ID:
+    for user_id in filtered_data:
         vk.messages.send(
-            peer_id=peer,
-            message=f'Done. New timestamp - {new_timestamp}',
+            peer_id=user_id,
+            message=DONE,
             random_id=get_random_id()
         )
-    for user_id in filtered_data:
-        if user_id not in PEERS_ID:
-            vk.messages.send(
-                peer_id=user_id,
-                message='Done.',
-                random_id=get_random_id()
-            )
     print('Выброс закончился')
 
 
-def get_attachments_after_timestamp(timestamp):
+def get_attachment():
     history = []
     # Получение списка всех диалогов
     conversations = vk.messages.getConversations()['items']
@@ -178,24 +170,26 @@ def get_attachments_after_timestamp(timestamp):
         users_score[peer_id] = defaultdict(int)
         history.extend(vk.messages.getHistory(user_id=peer_id, count=200)['items'])
     history.sort(key=lambda x: -x['date'])
-    new_last_tstamp = history[0]['date']
     attachments_list = []
     for m in history:
-        if 'attachments' in m and m['date'] >= timestamp:
+        if m['text'] != DONE:
             for attachment in m['attachments']:
                 type = attachment['type']
                 if type in ['photo', 'video']:
                     if 'access_key' in attachment[type]:
                         attachments_list.append(
-                            f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}_{attachment[type]['access_key']}")
+                            f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}_{attachment[type]['access_key']}"
+                        )
                     else:
                         attachments_list.append(f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}")
                 if type == 'audio':
                     attachments_list.append(
                         f"{type}{attachment[type]['owner_id']}_{attachment[type]['id']}")
                 users_score[m['from_id']][type] += 1
+        else:
+            break
 
-    return attachments_list, new_last_tstamp
+    return attachments_list
 
 
 def handle_message(event):
@@ -217,19 +211,14 @@ def _get_previous_attaches():
 
 def send_new_attachments():
     print('Стартуем!')
-    tstamp_reader = TimeStampReader()
-    print('Читается время начала...')
-    last_timestamp = tstamp_reader.get_last_timestamp()
     print('Ищутся последние вложения...')
-    attachments, new_timestamp = get_attachments_after_timestamp(last_timestamp)
+    attachments = get_attachment()
     prev_audio = _get_previous_attaches()
     attachments = prev_audio + attachments
     if attachments:
-        send_attachments_to_chat(attachments=attachments, new_timestamp=new_timestamp)
+        send_attachments_to_chat(attachments=attachments)
     else:
         print('Вложений нет')
-
-    tstamp_reader.set_new_timestamp(new_timestamp)
 
 
 print('Включаем бота...')
