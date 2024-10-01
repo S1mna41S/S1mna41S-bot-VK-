@@ -135,7 +135,7 @@ def send_attachments_to_chat(attachments):
     )
     sleep(time_to_sleep())
 
-    for photo in (attaches['video'] + attaches['photo']):
+    for photo in (attaches['photo'] + attaches['video']):
         response = vk.messages.send(
             chat_id=1,
             # peer_id=SENPAI_ID,
