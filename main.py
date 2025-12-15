@@ -1,12 +1,12 @@
-import vk_api
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from vk_api.longpoll import VkLongPoll, VkEventType
-
 from time import sleep
 from random import randint, choice
 import json
 from collections import defaultdict
 from random import shuffle
+
+import vk_api
+from vk_api.bot_longpoll import VkBotLongPoll
+from vk_api.longpoll import VkLongPoll, VkEventType
 
 SENPAI_ID = 120259013
 STARTERS_ID = [SENPAI_ID, 209523958]
