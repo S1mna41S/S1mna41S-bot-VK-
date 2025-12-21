@@ -4,7 +4,7 @@ on:
   schedule:
     # 19:00 GMT+5 == 14:00 UTC
     # day-of-week: 0 = Sunday, 3 = Wednesday
-    - cron: "0 6 * * 0,3"
+    - cron: "0 14 * * 0,3"
   workflow_dispatch:
 
 concurrency:
