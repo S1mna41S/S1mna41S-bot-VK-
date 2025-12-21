@@ -1,3 +1,4 @@
+import os
 from time import sleep
 from random import randint, choice
 import json
@@ -10,7 +11,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 
 SENPAI_ID = 120259013
 STARTERS_ID = [SENPAI_ID, 209523958]
-access_token = '59c075e4b6d90dc3774f2af6f0db72a19f6e42cdb7fe23541951e4916de7e76b578d9747d335dd1bd8591'
+access_token = os.environ["ACCESS_TOKEN"]
 users_score = {}
 
 PREV_AUDIO_FILE_NAME = 'remaining_audios.json'
@@ -211,10 +212,12 @@ def handle_message(event):
 
 
 def _get_previous_attaches():
-    with open(PREV_AUDIO_FILE_NAME, 'r') as f:
-        data = json.load(f)
-
-    return data[PREV_AUDIO_KEY_NAME]
+    try:
+        with open(PREV_AUDIO_FILE_NAME, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get(PREV_AUDIO_KEY_NAME, [])
+    except FileNotFoundError:
+        return []
 
 
 def send_new_attachments():
@@ -236,19 +239,22 @@ if __name__ == '__main__':
     vk_session = vk_api.VkApi(token=access_token)
     vk = vk_session.get_api()
 
-    longpoll = VkBotLongPoll(vk_session, 197221192)
+    if os.getenv("RUN_ONCE") == "1":
+        send_new_attachments()  # один запуск по расписанию
+    else:
+        longpoll = VkBotLongPoll(vk_session, 197221192)
 
-    # Получение id беседы, куда был добавлен бот
-    # longpoll_settings = vk.groups.getLongPollSettings(group_id=197221192, access_token=access_token)
-    # chat_ids = longpoll_settings['response']['settings']['api_version']['value']['message_new']['chat_ids']
-    # chat_id = chat_ids[0]
+        # Получение id беседы, куда был добавлен бот
+        # longpoll_settings = vk.groups.getLongPollSettings(group_id=197221192, access_token=access_token)
+        # chat_ids = longpoll_settings['response']['settings']['api_version']['value']['message_new']['chat_ids']
+        # chat_id = chat_ids[0]
 
 
-    # Подключение к LongPoll серверу
-    longpoll = VkLongPoll(vk_session)
+        # Подключение к LongPoll серверу
+        longpoll = VkLongPoll(vk_session)
 
-    print('Бот ждёт команды')
-    # Обработка сообщений
-    for event in longpoll.listen():
-        if event.type == VkEventType.MESSAGE_NEW:
-            handle_message(event)
+        print('Бот ждёт команды')
+        # Обработка сообщений
+        for event in longpoll.listen():
+            if event.type == VkEventType.MESSAGE_NEW:
+                handle_message(event)
