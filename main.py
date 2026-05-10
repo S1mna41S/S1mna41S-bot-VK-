@@ -194,7 +194,10 @@ def get_attachment():
                     attachments_list.append(
                         f"{atta_type}{attachment[atta_type]['owner_id']}_{attachment[atta_type]['id']}"
                     )
-                users_score[m['from_id']][atta_type] += 1
+                try:
+                    users_score[m['from_id']][atta_type] += 1
+                except KeyError:
+                    pass
         else:
             break
 
