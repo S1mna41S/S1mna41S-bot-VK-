@@ -54,6 +54,7 @@ def _send_titles():
     # Исключение пользователей, которые ничего не присылали
     filtered_users = {k: v for k, v in users_score.items() if sum(v.values()) != 0}
     sorted_users_score = dict(sorted(filtered_users.items(), key=lambda item: sum(item[1].values()), reverse=True))
+
     for user_id, meme in zip(sorted_users_score.keys(), meme_names):
         # Получение информации о пользователе
         user_info = vk.users.get(user_ids=user_id)[0]
@@ -65,6 +66,7 @@ def _send_titles():
             attaches_message += f'{sorted_users_score[user_id][attach]} {attach} '
         send_message(message=f'{meme}: {last_name} {first_name}\n{attaches_message}')
         sleep(time_to_sleep())
+
     if len(sorted_users_score) > len(meme_names):
         message = name_for_others + ':\n'
         for user_id in list(sorted_users_score.keys())[len(meme_names):]:
@@ -78,6 +80,16 @@ def _send_titles():
                 attaches_message += f'{sorted_users_score[user_id][attach]} {attach} '
             message += f'\n{last_name} {first_name}\n{attaches_message}'
         send_message(message=message)
+
+    # Добавляем сообщения о ленивых старших
+    for mb_lazy_id in STARTERS_ID:
+        if mb_lazy_id not in sorted_users_score.keys():
+            # Получение информации о пользователе
+            user_info = vk.users.get(user_ids=user_id)[0]
+            # Извлечение имени и фамилии пользователя
+            first_name = user_info['first_name']
+            last_name = user_info['last_name']
+            send_message(message=f'Ленивая жопа: {last_name} {first_name}')
 
     return filtered_users
 
