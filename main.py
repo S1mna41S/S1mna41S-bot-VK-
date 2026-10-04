@@ -85,7 +85,7 @@ def _send_titles():
     for mb_lazy_id in STARTERS_ID:
         if mb_lazy_id not in sorted_users_score.keys():
             # Получение информации о пользователе
-            user_info = vk.users.get(user_ids=user_id)[0]
+            user_info = vk.users.get(user_ids=mb_lazy_id)[0]
             # Извлечение имени и фамилии пользователя
             first_name = user_info['first_name']
             last_name = user_info['last_name']
