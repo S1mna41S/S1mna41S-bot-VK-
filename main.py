@@ -64,7 +64,7 @@ def _send_titles():
         attaches_message = ''
         for attach in sorted_users_score[user_id]:
             attaches_message += f'{sorted_users_score[user_id][attach]} {attach} '
-        send_message(message=f'{meme}: {last_name} {first_name}\n{attaches_message}')
+        send_message(message=f'{meme}:\n{last_name} {first_name}\n{attaches_message}')
         sleep(time_to_sleep())
 
     if len(sorted_users_score) > len(meme_names):
@@ -89,7 +89,7 @@ def _send_titles():
             # Извлечение имени и фамилии пользователя
             first_name = user_info['first_name']
             last_name = user_info['last_name']
-            send_message(message=f'Ленивая жопа: {last_name} {first_name}')
+            send_message(message=f'Ленивая жопа:\n{last_name} {first_name}')
 
     return filtered_users
 
